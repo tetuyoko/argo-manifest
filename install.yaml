@@ -1,0 +1,394 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: argo
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: gateways.argoproj.io
+spec:
+  group: argoproj.io
+  names:
+    kind: Gateway
+    listKind: GatewayList
+    plural: gateways
+    singular: gateway
+  scope: Namespaced
+  version: v1alpha1
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: sensors.argoproj.io
+spec:
+  group: argoproj.io
+  names:
+    kind: Sensor
+    listKind: SensorList
+    plural: sensors
+    singular: sensor
+  scope: Namespaced
+  version: v1alpha1
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: workflows.argoproj.io
+spec:
+  group: argoproj.io
+  names:
+    kind: Workflow
+    plural: workflows
+    shortNames:
+    - wf
+  scope: Namespaced
+  version: v1alpha1
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: argo-events
+  namespace: argo-events
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: argo
+  namespace: argo
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: argo-ui
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    rbac.authorization.k8s.io/aggregate-to-admin: "true"
+  name: argo-aggregate-to-admin
+rules:
+- apiGroups:
+  - argoproj.io
+  resources:
+  - workflows
+  - workflows/finalizers
+  verbs:
+  - create
+  - delete
+  - deletecollection
+  - get
+  - list
+  - patch
+  - update
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    rbac.authorization.k8s.io/aggregate-to-edit: "true"
+  name: argo-aggregate-to-edit
+rules:
+- apiGroups:
+  - argoproj.io
+  resources:
+  - workflows
+  - workflows/finalizers
+  verbs:
+  - create
+  - delete
+  - deletecollection
+  - get
+  - list
+  - patch
+  - update
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    rbac.authorization.k8s.io/aggregate-to-view: "true"
+  name: argo-aggregate-to-view
+rules:
+- apiGroups:
+  - argoproj.io
+  resources:
+  - workflows
+  - workflows/finalizers
+  verbs:
+  - get
+  - list
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: argo-cluster-role
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - pods/exec
+  verbs:
+  - create
+  - get
+  - list
+  - watch
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - watch
+  - list
+- apiGroups:
+  - ""
+  resources:
+  - persistentvolumeclaims
+  verbs:
+  - create
+  - delete
+- apiGroups:
+  - argoproj.io
+  resources:
+  - workflows
+  - workflows/finalizers
+  verbs:
+  - get
+  - list
+  - watch
+  - update
+  - patch
+  - delete
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: argo-events-cluster-role
+rules:
+- apiGroups:
+  - '*'
+  resources:
+  - '*'
+  verbs:
+  - '*'
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: argo-ui-cluster-role
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - pods/exec
+  - pods/log
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+- apiGroups:
+  - argoproj.io
+  resources:
+  - workflows
+  verbs:
+  - get
+  - list
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: argo-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: argo-cluster-role
+subjects:
+- kind: ServiceAccount
+  name: argo
+  namespace: argo
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: argo-events-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: argo-events-cluster-role
+subjects:
+- kind: ServiceAccount
+  name: argo-events
+  namespace: argo-events
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: argo-ui-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: argo-ui-cluster-role
+subjects:
+- kind: ServiceAccount
+  name: argo-ui
+  namespace: argo
+---
+apiVersion: v1
+data:
+  config: |
+    instanceID: argo-events
+    namespace: argo
+kind: ConfigMap
+metadata:
+  name: gateway-controller-configmap
+  namespace: argo-events
+---
+apiVersion: v1
+data:
+  config: |
+    instanceID: argo-events
+    namespace: argo
+kind: ConfigMap
+metadata:
+  name: sensor-controller-configmap
+  namespace: argo-events
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: workflow-controller-configmap
+  namespace: argo
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: argo-ui
+spec:
+  ports:
+  - port: 80
+    targetPort: 8001
+  selector:
+    app: argo-ui
+---
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: gateway-controller
+  namespace: argo-events
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: gateway-controller
+    spec:
+      containers:
+      - env:
+        - name: GATEWAY_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: GATEWAY_CONTROLLER_CONFIG_MAP
+          value: gateway-controller-configmap
+        image: argoproj/gateway-controller:latest
+        imagePullPolicy: Always
+        name: gateway-controller
+      serviceAccountName: argo-events
+---
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: argo-ui
+spec:
+  selector:
+    matchLabels:
+      app: argo-ui
+  template:
+    metadata:
+      labels:
+        app: argo-ui
+    spec:
+      containers:
+      - env:
+        - name: ARGO_NAMESPACE
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+        - name: IN_CLUSTER
+          value: "true"
+        - name: ENABLE_WEB_CONSOLE
+          value: "false"
+        - name: BASE_HREF
+          value: /
+        image: argoproj/argoui:v2.2.1
+        name: argo-ui
+      serviceAccountName: argo-ui
+---
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: sensor-controller
+  namespace: argo-events
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: sensor-controller
+    spec:
+      containers:
+      - env:
+        - name: SENSOR_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: SENSOR_CONFIG_MAP
+          value: sensor-controller-configmap
+        image: argoproj/sensor-controller:latest
+        imagePullPolicy: Always
+        name: sensor-controller
+      serviceAccountName: argo-events
+---
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: workflow-controller
+  namespace: argo
+spec:
+  selector:
+    matchLabels:
+      app: workflow-controller
+  template:
+    metadata:
+      labels:
+        app: workflow-controller
+    spec:
+      containers:
+      - args:
+        - --configmap
+        - workflow-controller-configmap
+        - --executor-image
+        - argoproj/argoexec:v2.2.1
+        command:
+        - workflow-controller
+        image: argoproj/workflow-controller:v2.2.1
+        name: workflow-controller
+      serviceAccountName: argo

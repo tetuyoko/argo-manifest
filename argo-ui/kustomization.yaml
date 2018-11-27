@@ -1,5 +1,9 @@
 namespace: argo
 
+# uncomment this to use NameSpace
+#bases:
+#  - ./../base
+
 resources:
   - ./clusterrole.yaml
   - ./clusterrolebinding.yaml

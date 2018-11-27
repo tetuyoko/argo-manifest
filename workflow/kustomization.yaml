@@ -1,5 +1,8 @@
 namespace: argo
 
+#bases:
+#  - ./../base
+
 resources:
   - ./crd.yaml
   - ./aggregate-roles.yaml

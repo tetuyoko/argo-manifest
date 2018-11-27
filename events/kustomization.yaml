@@ -1,7 +1,9 @@
-namespace: argo-events
+namespace: argo
+
+#bases:
+# - ./../base
 
 resources:
-  - ./ns.yaml
   - ./sa.yaml
   - ./clusterroles.yaml
   - ./sensor/configmap.yaml
