@@ -1,3 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: argo
+---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
@@ -287,26 +292,26 @@ spec:
 apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
-  name: gateway-controller
+  name: sensor-controller
   namespace: argo
 spec:
   replicas: 1
   template:
     metadata:
       labels:
-        app: gateway-controller
+        app: sensor-controller
     spec:
       containers:
       - env:
-        - name: GATEWAY_NAMESPACE
+        - name: SENSOR_NAMESPACE
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
-        - name: GATEWAY_CONTROLLER_CONFIG_MAP
-          value: gateway-controller-configmap
-        image: argoproj/gateway-controller:latest
+        - name: SENSOR_CONFIG_MAP
+          value: sensor-controller-configmap
+        image: argoproj/sensor-controller:latest
         imagePullPolicy: Always
-        name: gateway-controller
+        name: sensor-controller
       serviceAccountName: argo-events
 ---
 apiVersion: apps/v1beta2
@@ -369,24 +374,24 @@ spec:
 apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
-  name: sensor-controller
+  name: gateway-controller
   namespace: argo
 spec:
   replicas: 1
   template:
     metadata:
       labels:
-        app: sensor-controller
+        app: gateway-controller
     spec:
       containers:
       - env:
-        - name: SENSOR_NAMESPACE
+        - name: GATEWAY_NAMESPACE
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
-        - name: SENSOR_CONFIG_MAP
-          value: sensor-controller-configmap
-        image: argoproj/sensor-controller:latest
+        - name: GATEWAY_CONTROLLER_CONFIG_MAP
+          value: gateway-controller-configmap
+        image: argoproj/gateway-controller:latest
         imagePullPolicy: Always
-        name: sensor-controller
+        name: gateway-controller
       serviceAccountName: argo-events

@@ -2,8 +2,6 @@ namespace: argo
 
 bases:
   - ./base
-
-bases:
   - ./argo-ui
   - ./events
   - ./workflow

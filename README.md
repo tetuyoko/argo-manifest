@@ -11,11 +11,16 @@
 
 ```
  $ kustomize build . > install.yaml
- $ git diff dist/bundle.yaml
 ```
 
 ## Build & Apply
 
 ```
  $ kustomize build . | kc apply -f -
+```
+
+## Build single part
+
+```
+ $ kustomize build ./events
 ```
