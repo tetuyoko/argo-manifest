@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: argo-events
+  name: argo
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
@@ -34,7 +34,7 @@ spec:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: argo-events-sa
+  name: argo-events
   namespace: argo-events
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -59,14 +59,14 @@ roleRef:
   name: argo-events-cluster-role
 subjects:
 - kind: ServiceAccount
-  name: argo-events-sa
+  name: argo-events
   namespace: argo-events
 ---
 apiVersion: v1
 data:
   config: |
     instanceID: argo-events
-    namespace: argo-events
+    namespace: argo
 kind: ConfigMap
 metadata:
   name: gateway-controller-configmap
@@ -76,7 +76,7 @@ apiVersion: v1
 data:
   config: |
     instanceID: argo-events
-    namespace: argo-events
+    namespace: argo
 kind: ConfigMap
 metadata:
   name: sensor-controller-configmap
@@ -105,7 +105,7 @@ spec:
         image: argoproj/gateway-controller:latest
         imagePullPolicy: Always
         name: gateway-controller
-      serviceAccountName: argo-events-sa
+      serviceAccountName: argo-events
 ---
 apiVersion: apps/v1beta1
 kind: Deployment
@@ -130,4 +130,4 @@ spec:
         image: argoproj/sensor-controller:latest
         imagePullPolicy: Always
         name: sensor-controller
-      serviceAccountName: argo-events-sa
+      serviceAccountName: argo-events

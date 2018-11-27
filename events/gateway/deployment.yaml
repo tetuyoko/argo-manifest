@@ -10,7 +10,7 @@ spec:
       labels:
         app: gateway-controller
     spec:
-      serviceAccountName: argo-events-sa
+      serviceAccountName: argo-events
       containers:
       - name: gateway-controller
         image: argoproj/gateway-controller:latest
