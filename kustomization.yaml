@@ -1,0 +1,10 @@
+resources:
+  - ./ns.yaml
+  - ./sa.yaml
+  - ./clusterroles.yaml
+  - ./sensor/configmap.yaml
+  - ./sensor/crd.yaml
+  - ./sensor/deployment.yaml
+  - ./gateway/configmap.yaml
+  - ./gateway/crd.yaml
+  - ./gateway/deployment.yaml
