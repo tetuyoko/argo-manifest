@@ -1,0 +1,4 @@
+bases:
+  - ./argo-ui
+  - ./events
+  - ./workflow

@@ -1,10 +1,8 @@
 namespace: argo
 
 resources:
-  - ./crd.yaml
-  - ./aggregate-roles.yaml
-  - ./sa.yaml
   - ./clusterrole.yaml
   - ./clusterrolebinding.yaml
-  - ./configmap.yaml
   - ./deployment.yaml
+  - ./sa.yaml
+  - ./service.yaml
