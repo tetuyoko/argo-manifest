@@ -10,12 +10,12 @@
 ## Build & Diff
 
 ```
- $ kustomize build . > dist/bundle.yaml
+ $ kustomize build . > install.yaml
  $ git diff dist/bundle.yaml
 ```
 
 ## Build & Apply
 
 ```
- $ kustomize build .  | kc apply -f -
+ $ kustomize build . | kc apply -f -
 ```
