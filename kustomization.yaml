@@ -8,3 +8,4 @@ resources:
   - ./gateway/configmap.yaml
   - ./gateway/crd.yaml
   - ./gateway/deployment.yaml
+namespace: argo-events
