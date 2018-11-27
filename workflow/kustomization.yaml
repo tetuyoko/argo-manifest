@@ -1,0 +1,15 @@
+namespace: argo
+
+resources:
+- ./workflow/crd.yaml
+- ./workflow/aggregate-roles.yaml
+- ./workflow/sa.yaml
+- ./workflow/clusterrole.yaml
+- ./workflow/clusterrolebinding.yaml
+- ./workflow/configmap.yaml
+- ./workflow/deployment.yaml
+- ./argo-ui/sa.yaml
+- ./argo-ui/clusterrole.yaml
+- ./argo-ui/clusterrolebinding.yaml
+- ./argo-ui/deployment.yaml
+- ./argo-ui/service.yaml
