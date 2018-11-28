@@ -1,7 +1,7 @@
 ## Install Argo Events with Kustomize
 
  * https://github.com/argoproj/argo-events
- https://github.com/kubernetes-sigs/kustomize
+ * https://github.com/kubernetes-sigs/kustomize
 
 ## Install Kustomize
 
