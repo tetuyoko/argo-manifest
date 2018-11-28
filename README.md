@@ -16,7 +16,7 @@
 ## Build & Apply
 
 ```
- $ kustomize build . | kc apply -f -
+ $ kustomize build . | kubectl apply -f -
 ```
 
 ## Build single part
