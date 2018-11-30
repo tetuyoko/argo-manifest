@@ -12,3 +12,6 @@ resources:
   - ./gateway-controller/configmap.yaml
   - ./gateway-controller/crd.yaml
   - ./gateway-controller/deployment.yaml
+  - ./gateways/webhook-gateway-configmap.yaml
+  - ./gateways/webhook.yaml
+  - ./sensors/webhook.yaml

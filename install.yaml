@@ -272,6 +272,20 @@ metadata:
   namespace: argo
 ---
 apiVersion: v1
+data:
+  webhook.fooConfig: |-
+    endpoint: "/foo"
+    method: "POST"
+  webhook.portConfig: |-
+    port: "12000"
+    endpoint: "/bar"
+    method: "POST"
+kind: ConfigMap
+metadata:
+  name: webhook-gateway-configmap
+  namespace: argo
+---
+apiVersion: v1
 kind: ConfigMap
 metadata:
   name: workflow-controller-configmap
@@ -318,28 +332,33 @@ spec:
 apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
-  name: workflow-controller
+  name: argo-ui
   namespace: argo
 spec:
   selector:
     matchLabels:
-      app: workflow-controller
+      app: argo-ui
   template:
     metadata:
       labels:
-        app: workflow-controller
+        app: argo-ui
     spec:
       containers:
-      - args:
-        - --configmap
-        - workflow-controller-configmap
-        - --executor-image
-        - argoproj/argoexec:v2.2.1
-        command:
-        - workflow-controller
-        image: argoproj/workflow-controller:v2.2.1
-        name: workflow-controller
-      serviceAccountName: argo
+      - env:
+        - name: ARGO_NAMESPACE
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+        - name: IN_CLUSTER
+          value: "true"
+        - name: ENABLE_WEB_CONSOLE
+          value: "false"
+        - name: BASE_HREF
+          value: /
+        image: argoproj/argoui:v2.2.1
+        name: argo-ui
+      serviceAccountName: argo-ui
 ---
 apiVersion: apps/v1beta1
 kind: Deployment
@@ -369,30 +388,95 @@ spec:
 apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
-  name: argo-ui
+  name: workflow-controller
   namespace: argo
 spec:
   selector:
     matchLabels:
-      app: argo-ui
+      app: workflow-controller
   template:
     metadata:
       labels:
-        app: argo-ui
+        app: workflow-controller
     spec:
       containers:
-      - env:
-        - name: ARGO_NAMESPACE
-          valueFrom:
-            fieldRef:
-              apiVersion: v1
-              fieldPath: metadata.namespace
-        - name: IN_CLUSTER
-          value: "true"
-        - name: ENABLE_WEB_CONSOLE
-          value: "false"
-        - name: BASE_HREF
-          value: /
-        image: argoproj/argoui:v2.2.1
-        name: argo-ui
-      serviceAccountName: argo-ui
+      - args:
+        - --configmap
+        - workflow-controller-configmap
+        - --executor-image
+        - argoproj/argoexec:v2.2.1
+        command:
+        - workflow-controller
+        image: argoproj/workflow-controller:v2.2.1
+        name: workflow-controller
+      serviceAccountName: argo
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Gateway
+metadata:
+  labels:
+    gateway-name: webhook-gateway
+    gateways.argoproj.io/gateway-controller-instanceid: argo-events
+  name: webhook-gateway
+  namespace: argo
+spec:
+  configMap: webhook-gateway-configmap
+  deploySpec:
+    containers:
+    - command:
+      - /bin/webhook-gateway
+      image: argoproj/webhook-gateway
+      imagePullPolicy: IfNotPresent
+      name: webhook-events
+    serviceAccountName: argo-events
+  dispatchMechanism: HTTP
+  eventVersion: "1.0"
+  imageVersion: latest
+  serviceSpec:
+    ports:
+    - port: 12000
+      targetPort: 12000
+    selector:
+      gateway-name: webhook-gateway
+    type: LoadBalancer
+  type: webhook
+  watchers:
+    sensors:
+    - name: webhook-sensor
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Sensor
+metadata:
+  labels:
+    sensors.argoproj.io/sensor-controller-instanceid: argo-events
+  name: webhook-sensor
+  namespace: argo
+spec:
+  imageVersion: latest
+  repeat: true
+  serviceAccountName: argo-events
+  signals:
+  - name: webhook-gateway/webhook.fooConfig
+  triggers:
+  - name: webhook-workflow-trigger
+    resource:
+      group: argoproj.io
+      kind: Workflow
+      namespace: argo
+      source:
+        inline: |
+          apiVersion: argoproj.io/v1alpha1
+          kind: Workflow
+          metadata:
+            generateName: hello-world-
+          spec:
+            entrypoint: whalesay
+            templates:
+              - name: whalesay
+                container:
+                  args:
+                    - "hello world"
+                  command:
+                    - cowsay
+                  image: "docker/whalesay:latest"
+      version: v1alpha1
