@@ -14,4 +14,6 @@ resources:
   - ./gateway-controller/deployment.yaml
   - ./gateways/webhook-gateway-configmap.yaml
   - ./gateways/webhook.yaml
+  - ./gateways/calendar-gateway-configmap.yaml
+  - ./gateways/calendar-http.yaml
   - ./sensors/webhook.yaml

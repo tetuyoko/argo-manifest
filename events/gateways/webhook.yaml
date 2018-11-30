@@ -2,9 +2,12 @@ apiVersion: argoproj.io/v1alpha1
 kind: Gateway
 metadata:
   name: webhook-gateway
+  annotation: 
+    test: hoge
   labels:
     gateways.argoproj.io/gateway-controller-instanceid: argo-events
     gateway-name: "webhook-gateway"
+    fuja-name: "webalkgjabaj"
 spec:
   configMap: "webhook-gateway-configmap"
   type: "webhook"

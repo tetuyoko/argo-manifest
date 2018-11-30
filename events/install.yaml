@@ -1,0 +1,214 @@
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: gateways.argoproj.io
+spec:
+  group: argoproj.io
+  names:
+    kind: Gateway
+    listKind: GatewayList
+    plural: gateways
+    singular: gateway
+  scope: Namespaced
+  version: v1alpha1
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: sensors.argoproj.io
+spec:
+  group: argoproj.io
+  names:
+    kind: Sensor
+    listKind: SensorList
+    plural: sensors
+    singular: sensor
+  scope: Namespaced
+  version: v1alpha1
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: argo-events
+  namespace: argo
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: argo-events-cluster-role
+rules:
+- apiGroups:
+  - '*'
+  resources:
+  - '*'
+  verbs:
+  - '*'
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: argo-events-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: argo-events-cluster-role
+subjects:
+- kind: ServiceAccount
+  name: argo-events
+  namespace: argo
+---
+apiVersion: v1
+data:
+  config: |
+    instanceID: argo-events
+    namespace: argo
+kind: ConfigMap
+metadata:
+  name: gateway-controller-configmap
+  namespace: argo
+---
+apiVersion: v1
+data:
+  config: |
+    instanceID: argo-events
+    namespace: argo
+kind: ConfigMap
+metadata:
+  name: sensor-controller-configmap
+  namespace: argo
+---
+apiVersion: v1
+data:
+  webhook.fooConfig: |-
+    endpoint: "/foo"
+    method: "POST"
+  webhook.portConfig: |-
+    port: "12000"
+    endpoint: "/bar"
+    method: "POST"
+kind: ConfigMap
+metadata:
+  name: webhook-gateway-configmap
+  namespace: argo
+---
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: gateway-controller
+  namespace: argo
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: gateway-controller
+    spec:
+      containers:
+      - env:
+        - name: GATEWAY_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: GATEWAY_CONTROLLER_CONFIG_MAP
+          value: gateway-controller-configmap
+        image: argoproj/gateway-controller:latest
+        imagePullPolicy: Always
+        name: gateway-controller
+      serviceAccountName: argo-events
+---
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: sensor-controller
+  namespace: argo
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: sensor-controller
+    spec:
+      containers:
+      - env:
+        - name: SENSOR_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: SENSOR_CONFIG_MAP
+          value: sensor-controller-configmap
+        image: argoproj/sensor-controller:latest
+        imagePullPolicy: Always
+        name: sensor-controller
+      serviceAccountName: argo-events
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Gateway
+metadata:
+  annotation:
+    test: hoge
+  labels:
+    gateway-name: webhook-gateway
+    gateways.argoproj.io/gateway-controller-instanceid: argo-events
+  name: webhook-gateway
+  namespace: argo
+spec:
+  configMap: webhook-gateway-configmap
+  deploySpec:
+    containers:
+    - command:
+      - /bin/webhook-gateway
+      image: argoproj/webhook-gateway
+      imagePullPolicy: IfNotPresent
+      name: webhook-events
+    serviceAccountName: argo-events
+  dispatchMechanism: HTTP
+  eventVersion: "1.0"
+  imageVersion: latest
+  serviceSpec:
+    ports:
+    - port: 12000
+      targetPort: 12000
+    selector:
+      gateway-name: webhook-gateway
+    type: LoadBalancer
+  type: webhook
+  watchers:
+    sensors:
+    - name: webhook-sensor
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Sensor
+metadata:
+  labels:
+    sensors.argoproj.io/sensor-controller-instanceid: argo-events
+  name: webhook-sensor
+  namespace: argo
+spec:
+  imageVersion: latest
+  repeat: true
+  serviceAccountName: argo-events
+  signals:
+  - name: webhook-gateway/webhook.fooConfig
+  triggers:
+  - name: webhook-workflow-trigger
+    resource:
+      group: argoproj.io
+      kind: Workflow
+      namespace: argo
+      source:
+        inline: |
+          apiVersion: argoproj.io/v1alpha1
+          kind: Workflow
+          metadata:
+            generateName: hello-world-
+          spec:
+            entrypoint: whalesay
+            templates:
+              - name: whalesay
+                container:
+                  args:
+                    - "hello world"
+                  command:
+                    - cowsay
+                  image: "docker/whalesay:latest"
+      version: v1alpha1
