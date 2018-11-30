@@ -288,31 +288,7 @@ spec:
     targetPort: 8001
   selector:
     app: argo-ui
----
-apiVersion: apps/v1beta1
-kind: Deployment
-metadata:
-  name: sensor-controller
-  namespace: argo
-spec:
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        app: sensor-controller
-    spec:
-      containers:
-      - env:
-        - name: SENSOR_NAMESPACE
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.namespace
-        - name: SENSOR_CONFIG_MAP
-          value: sensor-controller-configmap
-        image: argoproj/sensor-controller:latest
-        imagePullPolicy: Always
-        name: sensor-controller
-      serviceAccountName: argo-events
+  type: LoadBalancer
 ---
 apiVersion: apps/v1beta2
 kind: Deployment
@@ -370,6 +346,31 @@ spec:
         image: argoproj/workflow-controller:v2.2.1
         name: workflow-controller
       serviceAccountName: argo
+---
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: sensor-controller
+  namespace: argo
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: sensor-controller
+    spec:
+      containers:
+      - env:
+        - name: SENSOR_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: SENSOR_CONFIG_MAP
+          value: sensor-controller-configmap
+        image: argoproj/sensor-controller:latest
+        imagePullPolicy: Always
+        name: sensor-controller
+      serviceAccountName: argo-events
 ---
 apiVersion: apps/v1beta1
 kind: Deployment
