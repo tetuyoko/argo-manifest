@@ -4,4 +4,4 @@ bases:
   - ./base
   - ./argo-ui
   - ./events
-  - ./workflow
+  - ./workflow-controller

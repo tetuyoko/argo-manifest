@@ -6,9 +6,9 @@ namespace: argo
 resources:
   - ./sa.yaml
   - ./clusterroles.yaml
-  - ./sensor/configmap.yaml
-  - ./sensor/crd.yaml
-  - ./sensor/deployment.yaml
-  - ./gateway/configmap.yaml
-  - ./gateway/crd.yaml
-  - ./gateway/deployment.yaml
+  - ./sensor-controller/configmap.yaml
+  - ./sensor-controller/crd.yaml
+  - ./sensor-controller/deployment.yaml
+  - ./gateway-controller/configmap.yaml
+  - ./gateway-controller/crd.yaml
+  - ./gateway-controller/deployment.yaml
