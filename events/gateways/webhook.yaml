@@ -30,3 +30,4 @@ spec:
   watchers:
     sensors:
     - name: "webhook-sensor"
+    - name: "webhook-with-payload-sensor"

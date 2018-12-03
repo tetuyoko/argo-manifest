@@ -28,8 +28,8 @@ spec:
                 templates:
                   - name: whalesay
                     container:
-                      args:
-                        - "hello world"
+                      image: "docker/whalesay:latest"
                       command:
                         - cowsay
-                      image: "docker/whalesay:latest"
+                      args:
+                        - "hello world"
