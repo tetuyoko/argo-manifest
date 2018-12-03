@@ -12,7 +12,7 @@ spec:
       image: "argoproj/calendar-http-gateway"
       imagePullPolicy: "Always"
       command: ["/bin/calendar-http"]
-    serviceAccountName: "argo-events-sa"
+    serviceAccountName: "argo-events"
   configMap: "calendar-gateway-configmap"
   type: "calendar"
   dispatchMechanism: "HTTP"
