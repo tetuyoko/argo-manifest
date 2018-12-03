@@ -24,3 +24,4 @@
 ```
  $ kustomize build ./events
 ```
+hoge
